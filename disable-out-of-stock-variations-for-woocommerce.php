@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Disable Out of Stock Variations for WooCommerce
  * Description: Automatically disables out-of-stock variations and allows custom Out of Stock text for dropdowns.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: Amirreza Saeedabadi
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -11,15 +11,18 @@
  * Text Domain: disable-out-of-stock-variations-for-woocommerce
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-    exit;
-}
+if ( ! defined( 'ABSPATH' ) ) exit;
 
-/*
-|--------------------------------------------------------------------------
+// Load translations
+load_plugin_textdomain(
+    'disable-out-of-stock-variations-for-woocommerce',
+    false,
+    dirname( plugin_basename( __FILE__ ) ) . '/languages/'
+);
+
+/*----------------------------------------------------------
 | Activation Requirement Check
-|--------------------------------------------------------------------------
-*/
+----------------------------------------------------------*/
 function doosvfw_check_requirements() {
     if ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
         deactivate_plugins( plugin_basename( __FILE__ ) );
@@ -37,42 +40,34 @@ function doosvfw_check_requirements() {
 }
 register_activation_hook( __FILE__, 'doosvfw_check_requirements' );
 
-/*
-|--------------------------------------------------------------------------
+/*----------------------------------------------------------
 | Disable Out Of Stock Variations
-|--------------------------------------------------------------------------
-*/
+----------------------------------------------------------*/
 function doosvfw_disable_variations( $active, $variation ) {
-    if ( ! $variation->is_in_stock() ) {
-        return false;
-    }
+    if ( ! $variation->is_in_stock() ) return false;
     return $active;
 }
 add_filter( 'woocommerce_variation_is_active', 'doosvfw_disable_variations', 10, 2 );
 
-/*
-|--------------------------------------------------------------------------
+/*----------------------------------------------------------
 | Settings
-|--------------------------------------------------------------------------
-*/
+----------------------------------------------------------*/
 function doosvfw_register_settings() {
     register_setting(
         'doosvfw_settings_group',
         'doosvfw_outofstock_text',
         array(
-            'type'              => 'string',
+            'type' => 'string',
             'sanitize_callback' => 'sanitize_text_field',
-            'default'           => '',
+            'default' => '',
         )
     );
 }
 add_action( 'admin_init', 'doosvfw_register_settings' );
 
-/*
-|--------------------------------------------------------------------------
+/*----------------------------------------------------------
 | Admin Menu
-|--------------------------------------------------------------------------
-*/
+----------------------------------------------------------*/
 function doosvfw_add_submenu() {
     add_submenu_page(
         'woocommerce',
@@ -85,11 +80,9 @@ function doosvfw_add_submenu() {
 }
 add_action( 'admin_menu', 'doosvfw_add_submenu' );
 
-/*
-|--------------------------------------------------------------------------
+/*----------------------------------------------------------
 | Settings Page
-|--------------------------------------------------------------------------
-*/
+----------------------------------------------------------*/
 function doosvfw_settings_page() {
     $value = get_option( 'doosvfw_outofstock_text', '' );
     ?>
@@ -105,7 +98,7 @@ function doosvfw_settings_page() {
                             type="text"
                             name="doosvfw_outofstock_text"
                             value="<?php echo esc_attr( $value ); ?>"
-                            placeholder="<?php esc_attr_e( 'Out of stock', 'disable-out-of-stock-variations-for-woocommerce' ); ?>"
+                            placeholder="<?php echo esc_attr__( 'Out of stock', 'disable-out-of-stock-variations-for-woocommerce' ); ?>"
                             class="regular-text"
                         />
                         <p class="description"><?php esc_html_e( 'Leave empty to use default text.', 'disable-out-of-stock-variations-for-woocommerce' ); ?></p>
@@ -118,22 +111,19 @@ function doosvfw_settings_page() {
     <?php
 }
 
-/*
-|--------------------------------------------------------------------------
+/*----------------------------------------------------------
 | Change Variation Option Text in Dropdown
-|--------------------------------------------------------------------------
-*/
+----------------------------------------------------------*/
 function doosvfw_variation_option_label( $term_name ) {
     global $product;
 
-    if ( ! $product || ! $product->is_type( 'variable' ) ) {
-        return $term_name;
-    }
+    if ( ! $product || ! $product->is_type( 'variable' ) ) return $term_name;
 
+    // Custom text entered by user
     $custom_text = trim( get_option( 'doosvfw_outofstock_text', '' ) );
-    if ( empty( $custom_text ) ) {
-        $custom_text = __( 'Out of stock', 'disable-out-of-stock-variations-for-woocommerce' );
-    }
+
+    // If empty, use gettext for translation
+    $display_text = ! empty( $custom_text ) ? $custom_text : __( 'Out of stock', 'disable-out-of-stock-variations-for-woocommerce' );
 
     foreach ( $product->get_children() as $variation_id ) {
         $variation = wc_get_product( $variation_id );
@@ -143,7 +133,7 @@ function doosvfw_variation_option_label( $term_name ) {
 
         foreach ( $attributes as $value ) {
             if ( $value === $term_name && ! $variation->is_in_stock() ) {
-                return $term_name . ' (' . $custom_text . ')';
+                return $term_name . ' (' . $display_text . ')';
             }
         }
     }
