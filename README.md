@@ -2,7 +2,9 @@
 
 Automatically disables out-of-stock variations in WooCommerce dropdowns and allows custom "Out of Stock" text.
 
----
+
+![Plugin Banner](assets/banner.png)
+
 
 ## Features
 
@@ -48,12 +50,34 @@ A: The plugin will automatically deactivate and show an admin notice.
 
 ## Changelog
 
+###  1.0.2 =
+- Refactored internationalization (i18n) system.
+- Added full multi-language support (8 languages).
+- Added translation files (PO) for:
+  - English (en_US)
+  - Persian (fa_IR)
+  - German (de_DE)
+  - French (fr_FR)
+  - Spanish (es_ES)
+  - Italian (it_IT)
+  - Chinese Simplified (zh_CN)
+  - Japanese (ja)
+- Improved gettext implementation for better localization.
+- Minor code improvements and cleanup.
+
 ### 1.0.1
 - Fixed display of custom "Out of Stock" text in variation dropdowns
 - Code cleanup and WordPress.org safe adjustments
 
 ### 1.0.0
 - Initial release
+
+---
+
+
+## Screenshots
+
+![Settings Screenshot](assets/Screenshot-1.png)
 
 ---
 
